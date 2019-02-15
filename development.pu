@@ -1,0 +1,93 @@
+@startuml
+left to right direction
+title development
+
+[dev.js]
+note right : for development.
+
+[README.md]
+[out/index.html]
+
+folder "npm run-script" {
+  [flow]
+  note bottom : check type and syntax etc.
+  
+  [type]
+  note right : import modules flow type info.
+
+  [babel]
+  note right : flow code to es5.
+
+  [watch]
+  note right : babel watch mode.
+
+  [compact]
+  note right : babel compact mode.
+
+  [jsdoc]
+
+  [readme]
+  note right : markdown of jsdoc.
+
+  [test]
+  note right : coming soon.
+
+  [start]
+  note right : node index.js
+}
+
+
+folder "npm run-script start (node -v // v8.11.2)" {
+  [index.js]
+  note right : for running.
+
+  database "sqlite3 DB" {
+    [get-tw-ff]
+  }
+
+  folder "node_modules" {
+    [argparse]
+    [fs-extra]
+    [puppeteer]
+    [node-notifier]
+    [sequelize]
+    [sqlite3]
+  }
+
+  folder "chromium>browser" {
+    [followings page]
+    [followers page]
+  }
+}
+
+[dev.js] ..> [flow] : import
+[dev.js] ..> [babel] : import
+[dev.js] ..> [watch] : import
+[dev.js] ..> [compact] : import
+
+[babel] ..> [index.js] : export
+[watch] ..> [index.js] : export
+[compact] ..> [index.js] : export
+
+[index.js] ..> [readme] : import
+[readme] ..> [README.md] : insert
+
+[index.js] ..> [start] : import
+
+[index.js] ..> [jsdoc] : import
+[jsdoc] ..> [out/index.html] : create
+
+[sequelize] -- [sqlite3]
+
+[argparse] ..> [index.js] : import
+[fs-extra] ..> [index.js] : import
+[puppeteer] ..> [index.js] : import
+[node-notifier] ..> [index.js] : import
+[sequelize] ..> [index.js] : import
+[sqlite3] ..> [index.js] : import
+
+[sqlite3] -down- [get-tw-ff]
+
+[puppeteer] -down- [followings page]
+[puppeteer] -down- [followers page]
+@enduml
