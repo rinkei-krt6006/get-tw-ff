@@ -45,6 +45,7 @@ parser.addArgument('--wait', { type: 'int', defaultValue: 30, help: 'this system
 parser.addArgument('--dbUser', { type: 'string', defaultValue: '', help: '' });
 parser.addArgument('--dbPassword', { type: 'string', defaultValue: '', help: '' });
 parser.addArgument('--dbLogging', { type: 'string', defaultValue: 'true', help: '' });
+parser.addArgument('--chromium', {type: 'int', defaultValue: 0, help: 'open chromium.'});
 
 /**
  * by Argument (string | number)
@@ -191,6 +192,7 @@ const scroll: Function = async (page: Object, fOrF: fOrFType) => {
   if (selectorCount === 1) {
     await page.click(selector);
     await page.waitForSelector('body');
+    await page.waitFor(3000);
     await scroll(page, fOrF);
     return;
   }
@@ -239,6 +241,9 @@ const newFOrFPage: Function = async (browser: Object, fOrF: fOrFType) => {
   });
   await page.goto('https://mobile.twitter.com/', { waitUntil: 'domcontentloaded' });
   await legacyTwYesAndUseThisLinkClick(page);
+  if (args.loginWait !== 0) {//これ追加
+    await page.waitFor(parseFloat(args.loginWait) * 1000);
+  }
   if (!await page.$('.home')) {
     await notifier.notify({ title: packInf.name, message: 'please login.' });
     await page.waitFor(parseFloat(args.wait) * 1000);
