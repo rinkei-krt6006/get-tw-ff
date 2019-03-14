@@ -10,7 +10,6 @@
 
 import packInf from './package.json';
 import { ArgumentParser } from 'argparse';
-import * as fs from 'fs-extra';
 import puppeteer from 'puppeteer';
 import Sequelize from 'sequelize';
 import notifier from 'node-notifier';
@@ -40,12 +39,12 @@ const parser: Object = new ArgumentParser({
   version: packInf.version,
   addHelp: true,
   description: packInf.description,
-  argumentDefault: {flip: true}
+  argumentDefault: { flip: true }
 });
-parser.addArgument('--wait', {type: 'int', defaultValue: 30, help: 'this system wait for you login to twitter. please set seconds time of waiting. *default: 10s'});
-parser.addArgument('--dbUser', {type: 'string', defaultValue: '', help: ''});
-parser.addArgument('--dbPassword', {type: 'string', defaultValue: '', help: ''});
-parser.addArgument('--dbLogging', {type: 'string', defaultValue: 'true', help: ''});
+parser.addArgument('--wait', { type: 'int', defaultValue: 30, help: 'this system wait for you login to twitter. please set seconds time of waiting. *default: 10s' });
+parser.addArgument('--dbUser', { type: 'string', defaultValue: '', help: '' });
+parser.addArgument('--dbPassword', { type: 'string', defaultValue: '', help: '' });
+parser.addArgument('--dbLogging', { type: 'string', defaultValue: 'true', help: '' });
 
 /**
  * by Argument (string | number)
@@ -64,7 +63,7 @@ const sequelize: Object = new Sequelize('database', args.dbUser.toString(), args
   operatorsAliases: false
 });
 
-/** 
+/**
  * this is sequelize model.
  * @type {Object}
  */
@@ -95,7 +94,7 @@ const getTwFF: Object = sequelize.define('get-tw-ff', {
     allowNull: false,
     defaultValue: false
   }
-}, {freezeTableName: true, timestamps: false});
+}, { freezeTableName: true, timestamps: false });
 
 /**
  * this function accept legacy tw.
@@ -106,8 +105,8 @@ const legacyTwYes: Function = async (page: Object) => {
   const yesBtnLen: number = parseFloat(await page.$$eval(selector, elms => elms.length));
   if (yesBtnLen === 0) return;
   page.click(selector);
-  await page.waitForNavigation({timeout: 60000, waitUntil: 'domcontentloaded'});
-  await page.reload({timeout: 60000, waitUntil:'domcontentloaded'});
+  await page.waitForNavigation({ timeout: 60000, waitUntil: 'domcontentloaded' });
+  await page.reload({ timeout: 60000, waitUntil: 'domcontentloaded' });
 };
 
 /**
@@ -117,7 +116,7 @@ const legacyTwYes: Function = async (page: Object) => {
 const useThisLinkClick: Function = async (page: Object) => {
   if (!await page.$('center')) return;
   page.$eval('center>a', elm => { location.href = elm.href; });
-  await page.waitForNavigation({timeout: 60000, waitUntil: 'domcontentloaded'});
+  await page.waitForNavigation({ timeout: 60000, waitUntil: 'domcontentloaded' });
 };
 
 /**
@@ -145,7 +144,7 @@ let countOfCalledFinishSequence: number = 0;
 const finishSequence: Function = () => {
   countOfCalledFinishSequence++;
   if (countOfCalledFinishSequence < 2) return;
-  notifier.notify({title: packInf.name, message: 'finish.'});
+  notifier.notify({ title: packInf.name, message: 'finish.' });
   process.exit(1);
 };
 
@@ -160,23 +159,22 @@ const finishSequence: Function = () => {
  */
 const scroll: Function = async (page: Object, fOrF: fOrFType) => {
   const ffInf: {usernames: string[], icons: string[], followings: boolean[]} = await page.$$eval('.user-item', (elms: Object[]) => {
-    let ffInf: {usernames: string[], icons: string[], followings: boolean[]} = {usernames: [], icons: [], followings: []};
+    let ffInf: {usernames: string[], icons: string[], followings: boolean[]} = { usernames: [], icons: [], followings: [] };
     for (let elm: Object of elms) {
       ffInf.usernames.push(elm.getElementsByClassName('username')[0].innerText.replace('@', ''));
       ffInf.icons.push(elm.getElementsByClassName('profile-image')[0].src.replace('https://pbs.twimg.com/profile_images/', '').replace(/_normal\.jpe?g$/, ''));
-      ffInf.followings.push('w-button-unfollow' === elm.getElementsByClassName('w-button-common')[0].classList[1]);
+      ffInf.followings.push(elm.getElementsByClassName('w-button-common')[0].classList[1] === 'w-button-unfollow');
     }
     return ffInf;
   });
   const ffInfIconsLen: number = ffInf.icons.length;
   for (let i: number = 0; i < ffInfIconsLen; i++) {
-    getTwFF.findOne({where: Sequelize.or({username: ffInf.usernames[i]}, {icon: ffInf.icons[i]})}).then(account => {
+    getTwFF.findOne({ where: Sequelize.or({ username: ffInf.usernames[i] }, { icon: ffInf.icons[i] }) }).then(account => {
       if (account) {
         account.username = ffInf.usernames[i];
         account.icon = ffInf.icons[i];
         account.following = ffInf.followings[i];
-        if (fOrF === 'followers' && !account.followers) 
-        account.followers = true;
+        if (fOrF === 'followers' && !account.followers) { account.followers = true; }
         account.save();
       } else {
         getTwFF.create({
@@ -215,39 +213,39 @@ const newFOrFPage: Function = async (browser: Object, fOrF: fOrFType) => {
   await page.setRequestInterception(true);
   await page.on('request', interceptedRequest => {
     const interceptedRequestUrl = interceptedRequest.url();
-    if (interceptedRequestUrl.endsWith('.mp4')
-      || interceptedRequestUrl.endsWith('.MP4')
-      || interceptedRequestUrl.endsWith('.png')
-      || interceptedRequestUrl.endsWith('.PNG')
-      || interceptedRequestUrl.endsWith('.jpg')
-      || interceptedRequestUrl.endsWith('.JPG')
-      || interceptedRequestUrl.endsWith('.jpeg')
-      || interceptedRequestUrl.endsWith('.JPEG')
-      || interceptedRequestUrl.endsWith('.jpg:small')
-      || interceptedRequestUrl.endsWith('.gif')
-      || interceptedRequestUrl.endsWith('.GIF')
-      || interceptedRequestUrl.endsWith('.ico')
-      || interceptedRequestUrl.endsWith('.ICO')
-      || interceptedRequestUrl.endsWith('.svg')
-      || interceptedRequestUrl.endsWith('.SVG')
-      || interceptedRequestUrl.endsWith('.css')
-      || interceptedRequestUrl.endsWith('.CSS')
-      || interceptedRequestUrl.endsWith('.woff')
-      || interceptedRequestUrl.endsWith('.WOFF')) {
+    if (interceptedRequestUrl.endsWith('.mp4') ||
+      interceptedRequestUrl.endsWith('.MP4') ||
+      interceptedRequestUrl.endsWith('.png') ||
+      interceptedRequestUrl.endsWith('.PNG') ||
+      interceptedRequestUrl.endsWith('.jpg') ||
+      interceptedRequestUrl.endsWith('.JPG') ||
+      interceptedRequestUrl.endsWith('.jpeg') ||
+      interceptedRequestUrl.endsWith('.JPEG') ||
+      interceptedRequestUrl.endsWith('.jpg:small') ||
+      interceptedRequestUrl.endsWith('.gif') ||
+      interceptedRequestUrl.endsWith('.GIF') ||
+      interceptedRequestUrl.endsWith('.ico') ||
+      interceptedRequestUrl.endsWith('.ICO') ||
+      interceptedRequestUrl.endsWith('.svg') ||
+      interceptedRequestUrl.endsWith('.SVG') ||
+      interceptedRequestUrl.endsWith('.css') ||
+      interceptedRequestUrl.endsWith('.CSS') ||
+      interceptedRequestUrl.endsWith('.woff') ||
+      interceptedRequestUrl.endsWith('.WOFF')) {
       interceptedRequest.abort();
-    }else{
+    } else {
       interceptedRequest.continue();
     }
   });
-  await page.goto('https://mobile.twitter.com/', {waitUntil:'domcontentloaded'});
+  await page.goto('https://mobile.twitter.com/', { waitUntil: 'domcontentloaded' });
   await legacyTwYesAndUseThisLinkClick(page);
   if (!await page.$('.home')) {
-    await notifier.notify({title: packInf.name, message: 'please login.'});
+    await notifier.notify({ title: packInf.name, message: 'please login.' });
     await page.waitFor(parseFloat(args.wait) * 1000);
   }
-  await page.goto('https://mobile.twitter.com/account/', {waitUntil:'domcontentloaded'});
+  await page.goto('https://mobile.twitter.com/account/', { waitUntil: 'domcontentloaded' });
   await legacyTwYesAndUseThisLinkClick(page);
-  await page.goto(`https://mobile.twitter.com/${await page.$eval('.screen-name', elm => elm.innerText)}/${fOrF}`, {waitUntil:'domcontentloaded'});
+  await page.goto(`https://mobile.twitter.com/${await page.$eval('.screen-name', elm => elm.innerText)}/${fOrF}`, { waitUntil: 'domcontentloaded' });
   await legacyTwYesAndUseThisLinkClick(page);
   await scroll(page, fOrF);
 };
@@ -258,7 +256,7 @@ const newFOrFPage: Function = async (browser: Object, fOrF: fOrFType) => {
     args: ['--window-size=550,700', '--window-position=50,50'],
     userDataDir: path.resolve(home, 'get-tw-app')
   });
-  await getTwFF.update({followers: false}, {where: {}}).then(() => {
+  await getTwFF.update({ followers: false }, { where: {} }).then(() => {
     for (let fOrF: fOrFType of ['following', 'followers']) newFOrFPage(browser, fOrF);
   });
 })();

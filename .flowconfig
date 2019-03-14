@@ -1,5 +1,6 @@
 [ignore]
 .*/node_modules/.*
+.*/db/.*
 
 [include]
 
@@ -8,5 +9,6 @@
 [lints]
 
 [options]
+emoji=true
 
 [strict]

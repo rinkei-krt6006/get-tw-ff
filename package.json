@@ -10,13 +10,14 @@
   "devDependencies": {
     "add-text-to-markdown": "^2.0.0",
     "babel-cli": "^6.26.0",
+    "babel-eslint": "^10.0.1",
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
     "babel-preset-es2015": "^6.24.1",
     "documentation": "^9.1.1",
-    "eslint-plugin-flowtype": "^3.2.1",
-    "flow-bin": "^0.91.0",
+    "eslint-plugin-flowtype": "^3.4.2",
+    "flow-bin": "^0.93.0",
     "flow-typed": "^2.5.1",
-    "jsdoc": "^3.5.5"
+    "semistandard": "^13.0.1"
   },
   "name": "get-tw-ff",
   "version": "1.0.0",
@@ -25,13 +26,29 @@
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "flow": "flow check",
-    "type": "flow-typed install",
+    "semistandard": "semistandard dev.js",
+    "semistandard:fix": "semistandard --fix dev.js",
+    "flow:check": "flow check",
+    "flow-typed:install": "flow-typed install",
     "babel": "babel dev.js -o index.js",
-    "watch": "babel dev.js -o index.js --watch",
-    "compact": "babel dev.js -o index.js --compact=true",
-    "jsdoc": "jsdoc index.js",
-    "readme": "documentation build -f md index.js | add-text-to-markdown README.md --section 'jsDoc' --write"
+    "babel:watch": "babel dev.js -o index.js --watch",
+    "babel:compact": "babel dev.js -o index.js --compact=true",
+    "sequelize:migrate": "cd ./db/ && sequelize db:migrate",
+    "documentation:build": "documentation build -f html ./dist/ -o ./doc/",
+    "documentation:add-text-to-markdown": "documentation build -f md index.js | add-text-to-markdown README.md --section 'DocumentationJS' --write"
+  },
+  "semistandard": {
+    "parser": "babel-eslint",
+    "plugins": [
+      "flowtype"
+    ],
+    "ignore": [
+      "node_modules",
+      "db"
+    ],
+    "global": [
+      "location"
+    ]
   },
   "repository": {
     "type": "git",
